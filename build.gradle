@@ -24,10 +24,6 @@ allprojects {
     version = '1.0'
 }
 
-// Project description
-group 'com.test.utils'
-version 1.0
-
 subprojects {
     // Plugins
     apply plugin: "java"
