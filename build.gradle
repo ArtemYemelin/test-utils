@@ -1,0 +1,98 @@
+buildscript {
+
+    project.ext {
+        lombokVersion = "1.18.4"
+        mapstructVersion = "1.2.0.Final"
+    }
+
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath "com.github.ben-manes:gradle-versions-plugin:0.20.0"
+    }
+}
+
+wrapper {
+    gradleVersion = "5.1.1"
+    distributionType = Wrapper.DistributionType.ALL
+}
+
+// Project description
+group 'com.test.utils'
+version 1.0
+
+subprojects {
+    // Plugins
+    apply plugin: "java"
+    apply plugin: "idea"
+    apply plugin: "com.github.ben-manes.versions"
+
+
+    // Java version
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+
+
+    // Repositories
+    repositories {
+        mavenCentral()
+    }
+
+    // Artifact dependencies
+    dependencies {
+
+        // Lombok
+        compileOnly "org.projectlombok:lombok:$project.lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$project.lombokVersion"
+        testCompileOnly "org.projectlombok:lombok:$project.lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$project.lombokVersion"
+
+        // MapStruct
+        compile "org.mapstruct:mapstruct:$project.mapstructVersion"
+        compileOnly "org.mapstruct:mapstruct-processor:$project.mapstructVersion"
+        annotationProcessor "org.mapstruct:mapstruct-processor:$project.mapstructVersion"
+    }
+
+    // Build variables
+    def generatedJavaSourcesPath = "$buildDir/generated-sources/java"
+    def generatedJavaSourcesDir = file(generatedJavaSourcesPath)
+
+    // Compilation settings
+    compileJava {
+        options.compilerArgs = [
+                // MapStruct compile settings
+                '-Amapstruct.unmappedTargetPolicy=IGNORE',
+
+                // Override the directory where to place generated source files.
+                "-s",
+                generatedJavaSourcesPath
+        ]
+
+        doFirst {
+            // Clean Up directory for generated files if exists and create a new one
+            if (generatedJavaSourcesDir.exists()) {
+                generatedJavaSourcesDir.deleteDir()
+            }
+            generatedJavaSourcesDir.mkdirs()
+        }
+    }
+
+    // Add additional source sets
+    sourceSets {
+        main {
+            java {
+                srcDir generatedJavaSourcesDir
+            }
+        }
+    }
+
+    // Testing
+    test {
+        useJUnitPlatform {
+            failFast true
+        }
+        reports.html.enabled = true
+    }
+}
